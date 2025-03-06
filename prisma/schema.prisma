@@ -1,0 +1,28 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model House {
+  id           Int                @id @default(autoincrement())
+  name         String             @unique
+  points       Int                @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  transactions PointTransaction[]
+}
+
+model PointTransaction {
+  id        Int      @id @default(autoincrement())
+  houseId   Int
+  points    Int // Peut être positif (ajout) ou négatif (retrait)
+  comment   String?
+  createdAt DateTime @default(now())
+  house     House    @relation(fields: [houseId], references: [id])
+}
