@@ -1,4 +1,3 @@
-// prisma/seed.ts
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -8,12 +7,12 @@ async function main() {
   const houseCount = await prisma.house.count();
   
   if (houseCount === 0) {
-    // Créer les quatre maisons
+    // Créer les quatre maisons avec les noms exacts de la maquette
     const houses = [
-      { name: 'Gryffondor', points: 0 },
       { name: 'Poufsouffle', points: 0 },
+      { name: 'Serpentard', points: 0 },
       { name: 'Serdaigle', points: 0 },
-      { name: 'Serpentard', points: 0 }
+      { name: 'Gryffondor', points: 0 }
     ];
     
     for (const house of houses) {

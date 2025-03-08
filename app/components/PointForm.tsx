@@ -1,4 +1,3 @@
-// app/components/PointForm.tsx
 "use client";
 
 import { useState } from 'react';
@@ -8,6 +7,24 @@ interface PointFormProps {
   houses: House[];
   onPointsUpdated: () => void;
 }
+
+// Fonction pour obtenir la couleur selon le nom de la maison
+const getHouseColor = (name: string): { bg: string, text: string, border: string } => {
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes('pouf') || lowerName.includes('hufflepuff')) 
+    return { bg: 'bg-yellow-500', text: 'text-yellow-500', border: 'border-yellow-500' };
+    
+  if (lowerName.includes('serp') || lowerName.includes('slytherin')) 
+    return { bg: 'bg-emerald-700', text: 'text-emerald-700', border: 'border-emerald-700' };
+    
+  if (lowerName.includes('serd') || lowerName.includes('ravenclaw')) 
+    return { bg: 'bg-blue-800', text: 'text-blue-800', border: 'border-blue-800' };
+    
+  if (lowerName.includes('gryf') || lowerName.includes('gryffindor')) 
+    return { bg: 'bg-red-700', text: 'text-red-700', border: 'border-red-700' };
+    
+  return { bg: 'bg-gray-500', text: 'text-gray-500', border: 'border-gray-500' };
+};
 
 export default function PointForm({ houses, onPointsUpdated }: PointFormProps) {
   const [selectedHouse, setSelectedHouse] = useState<number>(0);
@@ -72,9 +89,12 @@ export default function PointForm({ houses, onPointsUpdated }: PointFormProps) {
     }
   };
 
+  const selectedHouseObj = houses.find(h => h.id === selectedHouse);
+  const houseColors = selectedHouseObj ? getHouseColor(selectedHouseObj.name) : { bg: '', text: '', border: '' };
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Ajouter/Retirer des Points</h2>
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Ajouter ou Retirer des Points</h2>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -88,50 +108,88 @@ export default function PointForm({ houses, onPointsUpdated }: PointFormProps) {
         </div>
       )}
       
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
           <label className="block mb-2 font-medium">Maison</label>
-          <select
-            className="w-full p-2 border rounded-md"
-            value={selectedHouse}
-            onChange={(e) => setSelectedHouse(parseInt(e.target.value))}
-          >
-            <option value={0}>Sélectionnez une maison</option>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {houses.map((house) => (
-              <option key={house.id} value={house.id}>
-                {house.name}
-              </option>
+              <div
+                key={house.id}
+                className={`
+                  p-4 rounded-lg border-2 cursor-pointer transition-all
+                  ${selectedHouse === house.id 
+                    ? `${getHouseColor(house.name).border} ${getHouseColor(house.name).bg} text-white` 
+                    : 'border-gray-200 hover:border-gray-300'
+                  }
+                `}
+                onClick={() => setSelectedHouse(house.id)}
+              >
+                <div className="font-bold text-lg">{house.name}</div>
+                <div className="mt-1">{house.points} points</div>
+              </div>
             ))}
-          </select>
+          </div>
         </div>
         
-        <div className="mb-4">
-          <label className="block mb-2 font-medium">Points (négatif pour retirer)</label>
-          <input
-            type="number"
-            className="w-full p-2 border rounded-md"
-            value={points}
-            onChange={(e) => setPoints(parseInt(e.target.value))}
-          />
+        <div>
+          <label className="block mb-2 font-medium">Points</label>
+          <div className="flex items-center space-x-4">
+            <button
+              type="button"
+              className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold
+                ${points < 0 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-800'}
+              `}
+              onClick={() => setPoints(prev => (prev <= 0 ? prev - 1 : -1))}
+            >
+              -
+            </button>
+            
+            <input
+              type="number"
+              className={`w-20 h-16 text-center text-2xl font-bold border-2 rounded-md
+                ${points > 0 ? 'border-green-500 text-green-600' : 
+                  points < 0 ? 'border-red-500 text-red-600' : 
+                  'border-gray-300 text-gray-700'}
+              `}
+              value={points}
+              onChange={(e) => setPoints(parseInt(e.target.value) || 0)}
+            />
+            
+            <button
+              type="button"
+              className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold
+                ${points > 0 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-800'}
+              `}
+              onClick={() => setPoints(prev => (prev >= 0 ? prev + 1 : 1))}
+            >
+              +
+            </button>
+          </div>
         </div>
         
-        <div className="mb-4">
+        <div>
           <label className="block mb-2 font-medium">Commentaire</label>
           <textarea
-            className="w-full p-2 border rounded-md"
+            className="w-full p-3 border border-gray-300 rounded-md"
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Pourquoi ajouter/retirer des points?"
+            placeholder="Raison de l'ajout ou du retrait de points..."
           />
         </div>
         
         <button
           type="submit"
-          className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300"
-          disabled={isLoading}
+          className={`py-3 px-6 rounded-md text-white font-bold transition-colors
+            ${selectedHouse ? houseColors.bg : 'bg-gray-400 cursor-not-allowed'}
+          `}
+          disabled={isLoading || !selectedHouse}
         >
-          {isLoading ? 'Chargement...' : 'Soumettre'}
+          {isLoading ? 'Chargement...' : points > 0 
+            ? `Ajouter ${points} points` 
+            : points < 0 
+              ? `Retirer ${Math.abs(points)} points` 
+              : 'Soumettre'}
         </button>
       </form>
     </div>
